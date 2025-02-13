@@ -1,0 +1,180 @@
+<?php
+
+
+function validarCPF($cpf) {
+    
+    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+
+    
+    if (strlen($cpf) != 11) {
+        return false;
+    }
+
+    
+    if ($cpf === str_repeat($cpf[0], 11)) {
+        return false;
+    }
+
+    
+    $soma = 0;
+    for ($i = 0; $i < 9; $i++) {
+        $soma += $cpf[$i] * (10 - $i);
+    }
+    $resto = $soma % 11;
+    $digito1 = ($resto < 2) ? 0 : 11 - $resto;
+
+    
+    $soma = 0;
+    for ($i = 0; $i < 10; $i++) {
+        $soma += $cpf[$i] * (11 - $i);
+    }
+    $resto = $soma % 11;
+    $digito2 = ($resto < 2) ? 0 : 11 - $resto;
+
+    
+    if ($cpf[9] == $digito1 && $cpf[10] == $digito2) {
+        return true;
+    }
+
+    return false;
+}
+
+
+function cadastrarCliente(&$clientes) {
+    echo "Digite o CPF do cliente: ";
+    $cpf = trim(fgets(STDIN));
+
+    
+    if (!validarCPF($cpf)) {
+        echo "CPF inválido. Tente novamente.\n";
+        return;
+    }
+
+    
+    if (isset($clientes[$cpf])) {
+        echo "Cliente já cadastrado.\n";
+        return;
+    }
+
+    echo "Digite o nome do cliente: ";
+    $nome = trim(fgets(STDIN));
+
+    
+    $clientes[$cpf] = [
+        'nome' => $nome,
+        'saldo' => 0.0
+    ];
+
+    echo "Cliente cadastrado com sucesso!\n";
+}
+
+
+function deposito(&$clientes) {
+    echo "Digite o CPF do cliente: ";
+    $cpf = trim(fgets(STDIN));
+
+    
+    if (!isset($clientes[$cpf])) {
+        echo "Cliente não encontrado.\n";
+        return;
+    }
+
+    echo "Digite o valor do depósito: ";
+    $valor = floatval(trim(fgets(STDIN)));
+
+    
+    if ($valor <= 0) {
+        echo "O valor do depósito deve ser positivo.\n";
+        return;
+    }
+
+    
+    $clientes[$cpf]['saldo'] += $valor;
+    echo "Depósito realizado com sucesso! Novo saldo: R$ " . number_format($clientes[$cpf]['saldo'], 2, ',', '.') . "\n";
+}
+
+
+function saque(&$clientes) {
+    echo "Digite o CPF do cliente: ";
+    $cpf = trim(fgets(STDIN));
+
+    
+    if (!isset($clientes[$cpf])) {
+        echo "Cliente não encontrado.\n";
+        return;
+    }
+
+    echo "Digite o valor do saque: ";
+    $valor = floatval(trim(fgets(STDIN)));
+
+    
+    if ($valor <= 0) {
+        echo "O valor do saque deve ser positivo.\n";
+        return;
+    }
+
+    
+    if ($valor > $clientes[$cpf]['saldo']) {
+        echo "Saldo insuficiente para realizar o saque.\n";
+        return;
+    }
+
+    
+    $clientes[$cpf]['saldo'] -= $valor;
+    echo "Saque realizado com sucesso! Novo saldo: R$ " . number_format($clientes[$cpf]['saldo'], 2, ',', '.') . "\n";
+}
+
+
+function consultarSaldo(&$clientes) {
+    echo "Digite o CPF do cliente: ";
+    $cpf = trim(fgets(STDIN));
+
+    
+    if (!isset($clientes[$cpf])) {
+        echo "Cliente não encontrado.\n";
+        return;
+    }
+
+    echo "Saldo do cliente: R$ " . number_format($clientes[$cpf]['saldo'], 2, ',', '.') . "\n";
+}
+
+
+function menu() {
+    $clientes = []; 
+
+    while (true) {
+        echo "\n===== MENU =====\n";
+        echo "1. Cadastrar Cliente\n";
+        echo "2. Depositar\n";
+        echo "3. Sacar\n";
+        echo "4. Consultar Saldo\n";
+        echo "5. Sair\n";
+        echo "Escolha uma opção: ";
+
+        $opcao = trim(fgets(STDIN));
+
+        switch ($opcao) {
+            case 1:
+                cadastrarCliente($clientes);
+                break;
+            case 2:
+                deposito($clientes);
+                break;
+            case 3:
+                saque($clientes);
+                break;
+            case 4:
+                consultarSaldo($clientes);
+                break;
+            case 5:
+                echo "Saindo...\n";
+                return;
+            default:
+                echo "Opção inválida. Tente novamente.\n";
+        }
+    }
+}
+
+
+menu();
+?>
